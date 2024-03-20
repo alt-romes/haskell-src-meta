@@ -267,7 +267,7 @@ instance ToExp (Exts.Exp l) where
   toExp (Exts.App _ e (Exts.TypeApp _ t)) = TH.AppTypeE (toExp e) (toType t)
   toExp (Exts.App _ e f)               = TH.AppE (toExp e) (toExp f)
   toExp (Exts.NegApp _ e)              = TH.AppE (TH.VarE 'negate) (toExp e)
-  toExp (Exts.Lambda _ ps e)           = TH.LamE (fmap toPat ps) (toExp e)
+  toExp (Exts.Lambda _ ps e)           = TH.LamE (fmap (TH.VisAP . toPat) ps) (toExp e)
   toExp (Exts.Let _ bs e)              = TH.LetE (toDecs bs) (toExp e)
   toExp (Exts.If _ a b c)              = TH.CondE (toExp a) (toExp b) (toExp c)
   toExp (Exts.MultiIf _ ifs)           = TH.MultiIfE (map toGuard ifs)
@@ -736,11 +736,11 @@ hsMatchesToFunD xs@(Exts.InfixMatch _ _ n _ _ _ : _) = TH.FunD (toName n) (fmap 
 
 hsMatchToClause :: Exts.Match l -> TH.Clause
 hsMatchToClause (Exts.Match _ _ ps rhs bnds) = TH.Clause
-                                                (fmap toPat ps)
+                                                (fmap (TH.VisAP . toPat) ps)
                                                 (hsRhsToBody rhs)
                                                 (toDecs bnds)
 hsMatchToClause (Exts.InfixMatch _ p _ ps rhs bnds) = TH.Clause
-                                                        (fmap toPat (p:ps))
+                                                        (fmap (TH.VisAP . toPat) (p:ps))
                                                         (hsRhsToBody rhs)
                                                         (toDecs bnds)
 
@@ -798,7 +798,7 @@ instance ToDecs (Exts.Decl l) where
   toDecs (Exts.InfixDecl l assoc Nothing ops) =
       toDecs (Exts.InfixDecl l assoc (Just 9) ops)
   toDecs (Exts.InfixDecl _ assoc (Just fixity) ops) =
-    map (\op -> TH.InfixD (TH.Fixity fixity dir) (toName op)) ops
+    map (\op -> TH.InfixD (TH.Fixity fixity dir) TH.NoNamespaceSpecifier (toName op)) ops
    where
     dir = case assoc of
       Exts.AssocNone _  -> TH.InfixN

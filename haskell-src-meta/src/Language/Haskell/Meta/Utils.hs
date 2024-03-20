@@ -320,7 +320,7 @@ fromDataConI (DataConI dConN ty _tyConN) =
   let n = arityT ty
   in replicateM n (newName "a")
       >>= \ns -> return (Just (LamE
-                    [Compat.conP dConN (fmap VarP ns)]
+                    [VisAP $ Compat.conP dConN (fmap VarP ns)]
 #if MIN_VERSION_template_haskell(2,16,0)
                     (TupE $ fmap (Just . VarE) ns)
 #else
@@ -334,7 +334,7 @@ fromTyConI (TyConI dec) = Just dec
 fromTyConI _            = Nothing
 
 mkFunD :: Name -> [Pat] -> Exp -> Dec
-mkFunD f xs e = FunD f [Clause xs (NormalB e) []]
+mkFunD f xs e = FunD f [Clause (map VisAP xs) (NormalB e) []]
 
 mkClauseQ :: [PatQ] -> ExpQ -> ClauseQ
 mkClauseQ ps e = clause ps (normalB e) []

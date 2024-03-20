@@ -367,6 +367,8 @@ fromExtension e = case e of
   TH.ExtendedLiterals                  -> Nothing
 #endif
 
+  _ -> error "::::"
+
   -- NB: when adding a case here, you may also need to update `toExtension`
 
 
